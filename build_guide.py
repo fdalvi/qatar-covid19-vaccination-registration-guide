@@ -19,11 +19,16 @@ import arabic_reshaper
 
 from bidi.algorithm import get_display
 
+CONTRIBUTERS = [
+    ("Anthony Wanyoike Peter", ["Portal screenshots"]),
+    ("Imaduddin Ahmad Dalvi", ["Urdu translation"])
+]
+
 def text_transform_urdu(text):
     reshaper = arabic_reshaper.ArabicReshaper({'language': 'Urdu'})
     reshaper = arabic_reshaper.ArabicReshaper(
         arabic_reshaper.config_for_true_type_font(
-            'assets/fonts/noto/merged.ttf',
+            'assets/fonts/urdu/Roboto_NotoNaskhArabic-Regular.ttf',
             arabic_reshaper.ENABLE_ALL_LIGATURES
         )
     )
@@ -95,6 +100,7 @@ def main():
     bold_text_style = ParagraphStyle(name="text", fontName="Font-bold", fontSize=16, textColor="#333333", leading=20, alignment=text_alignment)
     footnote_yellow_style = ParagraphStyle(name="footnote", fontName="Font-light", fontSize=12, textColor="#fca103", leading=16, alignment=text_alignment)
     footnote_red_style = ParagraphStyle(name="footnote", fontName="Font-light", fontSize=12, textColor="#a30234", leading=16, alignment=text_alignment)
+    left_aligned_text_style = ParagraphStyle(name="text", fontName="Font-light", fontSize=16, textColor="#333333", leading=20, alignment=TA_LEFT)
 
     content_width = half_page_width - inch*0.2 - inch*0.2
     
@@ -316,10 +322,8 @@ def main():
     p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH)
     usedH = eH
 
-    preparation_text = "".join([
-        "• " + _("Anthony Wanyoike Peter (Portal screenshots)") + "<br/>",
-    ])
-    p = Paragraph(preparation_text, style=text_style)
+    preparation_text = "".join(["• " + _(f"{contributer} ({','.join(contributions)})") + "<br/>" for contributer, contributions in sorted(CONTRIBUTERS, key=lambda x: x[0])])
+    p = Paragraph(preparation_text, style=left_aligned_text_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
     p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
