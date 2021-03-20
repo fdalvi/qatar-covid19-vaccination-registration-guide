@@ -38,7 +38,6 @@ def text_transform_urdu(text):
 
 def paragraph_transform_urdu(paragraph):
     # Inplace line reverser
-    # paragraph.blPara.lines = list(reversed(paragraph.blPara.lines))
     transformed_lines = []
     for line in paragraph.blPara.lines:
         if isinstance(line, tuple):
@@ -65,21 +64,6 @@ def main():
     parser.add_argument("-l", "--language", default="en", choices={"en", "ur"}, help="Locale to generate the guide in")
     args = parser.parse_args()
 
-    i18n.set('locale', args.language)
-
-    if args.language == "en":
-        text_alignment = TA_LEFT
-        text_transformer = lambda x: x
-        paragraph_transformer = lambda x: x
-        pdfmetrics.registerFont(TTFont('Font-light', 'assets/fonts/roboto-android/Roboto-Light.ttf'))
-        pdfmetrics.registerFont(TTFont('Font-bold', 'assets/fonts/roboto-android/Roboto-Bold.ttf'))
-    elif args.language == "ur":
-        text_alignment = TA_RIGHT
-        text_transformer = text_transform_urdu
-        paragraph_transformer = paragraph_transform_urdu
-        pdfmetrics.registerFont(TTFont('Font-light', 'assets/fonts/urdu/Roboto_NotoNaskhArabic-Regular.ttf'))
-        pdfmetrics.registerFont(TTFont('Font-bold', 'assets/fonts/urdu/Roboto_NotoNaskhArabic-Bold.ttf'))
-
     # Default PDF page width will be same as A4, but height will be dependent
     # on the screenshot itself
     # Default margin is 0.5 inches
@@ -87,6 +71,26 @@ def main():
     page_width, page_height = A4
     half_page_width = (page_width-2*MARGIN)/2
 
+    # Set text, alignment and font settings based on locale
+    if args.language == "en":
+        text_alignment = TA_LEFT
+        text_transformer = lambda x: x
+        paragraph_transformer = lambda x: x
+        pdfmetrics.registerFont(TTFont('Font-light', 'assets/fonts/roboto-android/Roboto-Light.ttf'))
+        pdfmetrics.registerFont(TTFont('Font-bold', 'assets/fonts/roboto-android/Roboto-Bold.ttf'))
+        column_1_offset = 0
+        column_2_offset = half_page_width
+    elif args.language == "ur":
+        text_alignment = TA_RIGHT
+        text_transformer = text_transform_urdu
+        paragraph_transformer = paragraph_transform_urdu
+        pdfmetrics.registerFont(TTFont('Font-light', 'assets/fonts/urdu/Roboto_NotoNaskhArabic-Regular.ttf'))
+        pdfmetrics.registerFont(TTFont('Font-bold', 'assets/fonts/urdu/Roboto_NotoNaskhArabic-Bold.ttf'))
+        column_1_offset = half_page_width
+        column_2_offset = 0
+
+    # Load Translation Data
+    i18n.set('locale', args.language)
     i18n.load_path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'translations'))
     i18n.set('filename_format', '{locale}.{format}')
     i18n.set('file_format', 'json')
@@ -107,24 +111,30 @@ def main():
     # Cover page
     page_height = page_width
     c.setPageSize((page_width, page_height))
+
+    # Draw background
     c.setStrokeColorRGB(163/255, 2/255, 52/255)
     c.setFillColorRGB(163/255, 2/255, 52/255)
-    c.rect(MARGIN, MARGIN, half_page_width, page_height-2*MARGIN, fill=1)
+    c.rect(MARGIN + column_1_offset, MARGIN, half_page_width, page_height-2*MARGIN, fill=1)
+
+    # Draw title
     p = Paragraph(_("main-title"), style=heading_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, MARGIN + inch*0.2, page_height - MARGIN - eH - inch*0.2)
+    p.drawOn(c, MARGIN + column_1_offset + inch*0.2, page_height - MARGIN - eH - inch*0.2)
 
+    # Draw disclaimer
     p = Paragraph(_("disclaimer"), style=footnote_yellow_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, MARGIN + inch*0.2,  MARGIN + inch*0.2)
+    p.drawOn(c, MARGIN + column_1_offset + inch*0.2,  MARGIN + inch*0.2)
 
+    # Draw cover text
     usedH = 0
     p = Paragraph(_("preparation-title"), style=subheading_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH)
     usedH = eH
 
     preparation_text = "".join([
@@ -139,13 +149,13 @@ def main():
     p = Paragraph(preparation_text, style=text_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
     usedH += eH + inch * 0.5
 
     p = Paragraph(_("overview-title"), style=subheading_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
     usedH += eH + inch * 0.2
 
     preparation_text = "".join([
@@ -155,7 +165,7 @@ def main():
     p = Paragraph(preparation_text, style=text_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
     usedH += eH
 
     c.showPage()
@@ -268,7 +278,7 @@ def main():
         c.setPageSize((page_width, page_height))
 
         # draw screenshot
-        c.drawInlineImage(page_screenshot, MARGIN, MARGIN, half_page_width, page_height-2*MARGIN, preserveAspectRatio=True)
+        c.drawInlineImage(page_screenshot, MARGIN + column_1_offset, MARGIN, half_page_width, page_height-2*MARGIN, preserveAspectRatio=True)
 
         # Draw texts
         print(f"Page {page_idx}")
@@ -294,7 +304,7 @@ def main():
                 usedH += eH
             print(f"{eW} {eH} {usedH}")
 
-            p.drawOn(c, half_page_width + MARGIN + inch*0.2, y)
+            p.drawOn(c, column_2_offset + MARGIN + inch*0.2, y)
             
         
         c.showPage()
@@ -304,47 +314,47 @@ def main():
     c.setPageSize((page_width, page_height))
     c.setStrokeColorRGB(163/255, 2/255, 52/255)
     c.setFillColorRGB(163/255, 2/255, 52/255)
-    c.rect(MARGIN, MARGIN, half_page_width, page_height-2*MARGIN, fill=1)
+    c.rect(MARGIN + column_1_offset, MARGIN, half_page_width, page_height-2*MARGIN, fill=1)
     p = Paragraph(_("end-title"), style=heading_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, MARGIN + inch*0.2, page_height - MARGIN - eH - inch*0.2)
+    p.drawOn(c, MARGIN + column_1_offset + inch*0.2, page_height - MARGIN - eH - inch*0.2)
 
     p = Paragraph(f"v{datetime.datetime.now().strftime('%Y%m%d')}", style=footnote_yellow_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, MARGIN + inch*0.2,  MARGIN + inch*0.2)
+    p.drawOn(c, MARGIN + column_1_offset + inch*0.2,  MARGIN + inch*0.2)
 
     usedH = 0
     p = Paragraph(_("contributors-title"), style=subheading_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH)
     usedH = eH
 
     preparation_text = "".join(["• " + _(f"{contributer} ({','.join(contributions)})") + "<br/>" for contributer, contributions in sorted(CONTRIBUTERS, key=lambda x: x[0])])
     p = Paragraph(preparation_text, style=left_aligned_text_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
     usedH += eH + inch * 0.5
 
     p = Paragraph(_("created-title"), style=subheading_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
     usedH += eH + inch * 0.2
 
     p = Paragraph("Fahim Dalvi", style=text_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
     usedH += eH + inch * 0.2
 
     p = Paragraph(_("contribution-note").replace("<CONTACT_EMAIL>", "<a href=\"mailto:fdalvi.vaccine.guide@protonmail.com\" color=\"blue\">fdalvi.vaccine.guide@protonmail.com</a>"), style=footnote_red_style)
     eW, eH = p.wrap(content_width, page_height-2*MARGIN)
     paragraph_transformer(p)
-    p.drawOn(c, half_page_width + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
+    p.drawOn(c, column_2_offset + MARGIN + inch*0.2, page_height - MARGIN - eH - usedH - inch*0.2)
     usedH += eH
 
     c.showPage()
