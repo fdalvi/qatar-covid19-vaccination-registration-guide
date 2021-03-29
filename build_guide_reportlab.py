@@ -22,6 +22,8 @@ from bidi.algorithm import get_display
 CONTRIBUTERS = [
     ("Anthony Wanyoike Peter", ["Portal screenshots"]),
     ("Imaduddin Ahmad Dalvi", ["Urdu translation"]),
+    ("Ranjanas Vadivel", ["Sinhala and Tamil translation"]),
+    ("Paul Mary Ranjanas", ["Sinhala and Tamil translation"]),
 ]
 
 
@@ -65,7 +67,7 @@ def main():
         "-l",
         "--language",
         default="en",
-        choices={"en", "ur"},
+        choices={"en", "ur", "si", "ta"},
         help="Locale to generate the guide in",
     )
     args = parser.parse_args()
@@ -102,6 +104,31 @@ def main():
         )
         column_1_offset = half_page_width
         column_2_offset = 0
+    elif args.language == "si":
+        text_alignment = TA_LEFT
+        text_transformer = lambda x: x
+        paragraph_transformer = lambda x: x
+        pdfmetrics.registerFont(
+            TTFont("Font-light", "assets/fonts/sinhala/NotoSans_NotoSansSinhala-Light.ttf")
+        )
+        pdfmetrics.registerFont(
+            TTFont("Font-bold", "assets/fonts/sinhala/NotoSans_NotoSansSinhala-Bold.ttf")
+        )
+        column_1_offset = 0
+        column_2_offset = half_page_width
+    elif args.language == "ta":
+        text_alignment = TA_LEFT
+        text_transformer = lambda x: x
+        paragraph_transformer = lambda x: x
+        pdfmetrics.registerFont(
+            TTFont("Font-light", "assets/fonts/tamil/NotoSans_NotoSansTamil-Light.ttf")
+        )
+        pdfmetrics.registerFont(
+            TTFont("Font-bold", "assets/fonts/tamil/NotoSans_NotoSansTamil-Bold.ttf")
+        )
+        column_1_offset = 0
+        column_2_offset = half_page_width
+
 
     # Initialize Translation routines
     i18n.set("locale", args.language)
