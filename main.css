@@ -1,0 +1,47 @@
+.heading {
+    color: #fca103;
+    font-family: 'BoldFont';
+    font-size: 40px;
+    line-height: 44px;
+    font-weight: bold;
+}
+
+.subheading {
+    color: #333333;
+    font-family: 'BoldFont';
+    font-size: 30px;
+    line-height: 34px;
+    font-weight: bold;
+}
+
+.text {
+    color: #333333;
+    font-family: 'LightFont';
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 200;
+}
+
+.footnote-yellow {
+    color: #fca103;
+    font-family: 'LightFont';
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 100;
+}
+
+.footnote-red {
+    color: #a30234;
+    font-family: 'LightFont';
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 100;
+}
+
+img {
+    width: 100%;
+}
+
+li {
+    padding-bottom: 7px;
+}
