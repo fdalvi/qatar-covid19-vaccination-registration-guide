@@ -1,3 +1,4 @@
+import argparse
 import pdfkit
 import datetime
 from yattag import Doc
@@ -318,9 +319,24 @@ def render_contributers_page(translation, doc_style):
     return pdfkit.from_string(doc.getvalue(), False, options=options)
 
 def main():
-    locale = 'ta'
+    parser = argparse.ArgumentParser()
 
-    if locale == 'en':
+    parser.add_argument(
+        "-l",
+        "--language",
+        default="en",
+        choices={"en", "ur", "si", "ta"},
+        help="Locale to generate the guide in",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        help="Output pdf name",
+    )
+    args = parser.parse_args()
+
+    if args.language == 'en':
         doc_style = '''
         @font-face {
             font-family: 'LightFont';
@@ -337,7 +353,7 @@ def main():
         ''' + '''
         }
         '''
-    elif locale == 'ur':
+    elif args.language == 'ur':
         doc_style = '''
         @font-face {
             font-family: 'LightFont';
@@ -358,7 +374,7 @@ def main():
             direction: rtl;
         }
         '''
-    elif locale == 'ta':
+    elif args.language == 'ta':
         doc_style = '''
         @font-face {
             font-family: 'LightFont';
@@ -404,12 +420,57 @@ def main():
             line-height: 18px;
             font-weight: 100;
         }
+        '''
+    elif args.language == 'si':
+        doc_style = '''
+        @font-face {
+            font-family: 'LightFont';
+        ''' + f'''
+            src: url("{os.path.abspath('assets/fonts/sinhala/NotoSans_NotoSansSinhala-Light.ttf')}");
+        ''' + '''
+            font-weight: 200;
+        }
 
+        @font-face {
+            font-family: 'BoldFont';
+        ''' + f'''
+            src: url("{os.path.abspath('assets/fonts/sinhala/NotoSans_NotoSansSinhala-Bold.ttf')}");
+        ''' + '''
+        }
 
+        .heading {
+            font-size: 36px;
+            line-height: 40px;
+        }
+
+        .subheading {
+            font-size: 26px;
+            line-height: 30px;
+        }
+
+        .text {
+            font-size: 18px;
+            line-height: 22px;
+            font-weight: 200;
+        }
+
+        .footnote-yellow {
+            font-size: 14px;
+            line-height: 18px;
+            font-weight: 100;
+        }
+
+        .footnote-red {
+            color: #a30234;
+            font-family: 'LightFont';
+            font-size: 14px;
+            line-height: 18px;
+            font-weight: 100;
+        }
         '''
 
     # Initialize Translation routines
-    i18n.set("locale", locale)
+    i18n.set("locale", args.language)
     i18n.load_path.append(
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "translations")
     )
@@ -424,7 +485,7 @@ def main():
     merger = PdfFileMerger()
     for page in [cover_pdf] + guide_pdfs + [contributers_pdf]:
         merger.append(io.BytesIO(page), import_bookmarks=False)
-    merger.write('out.pdf')
+    merger.write(args.output)
     merger.close()
 
 if __name__ == '__main__':
