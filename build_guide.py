@@ -10,12 +10,19 @@ import io
 import i18n
 import os
 
+HINDI_TRANFORMS = {
+    'के ': 'के ',
+    'र्क ': 'र्क '
+}
+
 CONTRIBUTERS = [
     ("Anthony Wanyoike Peter", ["Portal screenshots"]),
     ("Imaduddin Ahmad Dalvi", ["Urdu translation"]),
     ("Ranjanas Vadivel", ["Sinhala and Tamil translation"]),
     ("Paul Mary Ranjanas", ["Sinhala and Tamil translation"]),
-    ("Nadir Durrani", ["Urdu translation"])
+    ("Nadir Durrani", ["Urdu translation"]),
+    ("Lamana Mulaffer", ["Sinhala and Tamil translation"]),
+    ("Nijla Mulaffer", ["Sinhala and Tamil translation"])
 ]
 
 def render_cover_page(translation, doc_style):
@@ -77,8 +84,8 @@ def render_cover_page(translation, doc_style):
         'quiet': None
     }
 
-    with open('out.html', 'w') as fp:
-        fp.write(doc.getvalue())
+    # with open('out.html', 'w') as fp:
+    #     fp.write(doc.getvalue())
 
     return pdfkit.from_string(doc.getvalue(), False, options=options)
 
@@ -318,6 +325,11 @@ def render_contributers_page(translation, doc_style):
 
     return pdfkit.from_string(doc.getvalue(), False, options=options)
 
+def text_transformer(text, transforms):
+    for k, v in transforms.items():
+        text = text.replace(k, v)
+    return text
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -325,7 +337,7 @@ def main():
         "-l",
         "--language",
         default="en",
-        choices={"en", "ur", "si", "ta"},
+        choices={"en", "ur", "si", "ta", "hi"},
         help="Locale to generate the guide in",
     )
     parser.add_argument(
@@ -335,6 +347,15 @@ def main():
         help="Output pdf name",
     )
     args = parser.parse_args()
+
+    # Initialize Translation routines
+    i18n.set("locale", args.language)
+    i18n.load_path.append(
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), "translations")
+    )
+    i18n.set("filename_format", "{locale}.{format}")
+    i18n.set("file_format", "json")
+    translation = lambda text_id: i18n.t(text_id)
 
     if args.language == 'en':
         doc_style = '''
@@ -468,15 +489,25 @@ def main():
             font-weight: 100;
         }
         '''
+    elif args.language == 'hi':
+        doc_style = '''
+        @font-face {
+            font-family: 'LightFont';
+        ''' + f'''
+            src: url("{os.path.abspath('assets/fonts/hindi/NotoSans_NotoSansDevanagari-Light.ttf')}");
+        ''' + '''
+            font-weight: 200;
+        }
 
-    # Initialize Translation routines
-    i18n.set("locale", args.language)
-    i18n.load_path.append(
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), "translations")
-    )
-    i18n.set("filename_format", "{locale}.{format}")
-    i18n.set("file_format", "json")
-    translation = lambda text_id: i18n.t(text_id)
+        @font-face {
+            font-family: 'BoldFont';
+        ''' + f'''
+            src: url("{os.path.abspath('assets/fonts/hindi/NotoSans_NotoSansDevanagari-Bold.ttf')}");
+        ''' + '''
+        }
+        '''
+
+        translation = lambda text_id: text_transformer(i18n.t(text_id), HINDI_TRANFORMS)
 
     cover_pdf = render_cover_page(translation, doc_style)
     guide_pdfs = render_guide_pages(translation, doc_style)
